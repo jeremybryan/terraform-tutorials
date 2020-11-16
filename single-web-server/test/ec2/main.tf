@@ -12,6 +12,20 @@ terraform {
   # 0.12.26 as the minimum version, as that version added support for required_providers with source URLs, making it
   # forwards compatible with 0.13.x code.
   required_version = ">= 0.12.26"
+  backend "s3" {
+    bucket = "monarch-sws-tfstate-ec2"
+    key    = "single-web-server/test/ec2"
+    region = "us-east-2"
+  }
+}
+
+data "terraform_remote_state" "sg" {
+  backend = "s3"
+  config = {
+    bucket = "monarch-sws-tfstate-sg"
+    key    = "single-web-server/test/sg"
+    region = "us-east-2"
+  }
 }
 
 # ------------------------------------------------------------------------------
@@ -30,7 +44,7 @@ resource "aws_instance" "example" {
   # Ubuntu Server 18.04 LTS (HVM), SSD Volume Type in us-east-2
   ami                    = "ami-0c55b159cbfafe1f0"
   instance_type          = "t2.micro"
-  vpc_security_group_ids = [aws_security_group.instance.id]
+  vpc_security_group_ids = [data.terraform_remote_state.sg.outputs.security-group]
 
   user_data = <<-EOF
               #!/bin/bash
@@ -39,22 +53,7 @@ resource "aws_instance" "example" {
               EOF
 
   tags = {
-    Name = "terraform-example"
+    Name = "terraform-example-test"
   }
 }
 
-# ---------------------------------------------------------------------------------------------------------------------
-# CREATE THE SECURITY GROUP THAT'S APPLIED TO THE EC2 INSTANCE
-# ---------------------------------------------------------------------------------------------------------------------
-
-resource "aws_security_group" "instance" {
-  name = "terraform-example-instance"
-
-  # Inbound HTTP from anywhere
-  ingress {
-    from_port   = var.server_port
-    to_port     = var.server_port
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
