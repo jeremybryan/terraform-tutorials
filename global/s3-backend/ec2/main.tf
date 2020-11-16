@@ -18,14 +18,14 @@ terraform {
 # ------------------------------------------------------------------------------
 
 provider "aws" {
-  region = "us-east-2"
+  region = var.region
+  profile = var.profile
 }
 
 # ------------------------------------------------------------------------------
 # CREATE THE S3 BUCKET
 # ------------------------------------------------------------------------------
 resource "aws_s3_bucket" "terraform_state" {
-  # TODO: change this to your own name! S3 bucket names must be *globally* unique.
   bucket = "monarch-sws-tfstate-ec2"
 
   # Enable versioning so we can see the full revision history of our

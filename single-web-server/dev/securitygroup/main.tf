@@ -15,7 +15,7 @@ terraform {
   backend "s3" {
     bucket = "monarch-sws-tfstate-sg"
     key    = "single-web-server/dev/sg"
-    region = "us-east-2"
+    region = "us-gov-east-1"
   }
 }
 
@@ -24,8 +24,10 @@ terraform {
 # ------------------------------------------------------------------------------
 
 provider "aws" {
-  region = "us-east-2"
+  region = var.region
+  profile = var.profile
 }
+
 # ---------------------------------------------------------------------------------------------------------------------
 # CREATE THE SECURITY GROUP THAT'S APPLIED TO THE EC2 INSTANCE
 # ---------------------------------------------------------------------------------------------------------------------

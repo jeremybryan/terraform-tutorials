@@ -15,7 +15,7 @@ terraform {
   backend "s3" {
     bucket = "monarch-sws-tfstate-ec2"
     key    = "single-web-server/dev/ec2"
-    region = "us-east-2"
+    region = "us-gov-east-1"
   }
 }
 
@@ -25,7 +25,7 @@ data "terraform_remote_state" "sg" {
     # Replace this with your bucket name!
     bucket = "monarch-sws-tfstate-sg"
     key    = "single-web-server/dev/sg"
-    region = "us-east-2"
+    region = "us-gov-east-1"
   }
 }
 
@@ -34,45 +34,34 @@ data "terraform_remote_state" "sg" {
 # ------------------------------------------------------------------------------
 
 provider "aws" {
-  region = "us-east-2"
+  region = "us-gov-east-1"
+  profile = "tapestry"
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
 # DEPLOY A SINGLE EC2 INSTANCE
 # ---------------------------------------------------------------------------------------------------------------------
+module "example_instance" {
+  source = "../../../modules/dev/ec2"
 
-resource "aws_instance" "example" {
-  # Ubuntu Server 18.04 LTS (HVM), SSD Volume Type in us-east-2
-  ami                    = "ami-0c55b159cbfafe1f0"
-  instance_type          = "t2.micro"
+  ami                    = "ami-7a09e00b"
   vpc_security_group_ids = [data.terraform_remote_state.sg.outputs.security-group]
+  server_port = 8080
 
-  user_data = <<-EOF
-              #!/bin/bash
-              echo "Hello, World" > index.html
-              nohup busybox httpd -f -p "${var.server_port}" &
-              EOF
-
-  tags = {
-    Name = "terraform-example-dev"
-  }
+  #tags = {
+  #  Name = "terraform-example-dev"
+  #}
 }
 
 
-resource "aws_instance" "example_ii" {
-  # Ubuntu Server 18.04 LTS (HVM), SSD Volume Type in us-east-2
-  ami                    = "ami-0c55b159cbfafe1f0"
-  instance_type          = "t2.micro"
+module "example_instance_ii" {
+  source = "../../../modules/dev/ec2"
+
+  ami                    = "ami-7a09e00b"
   vpc_security_group_ids = [data.terraform_remote_state.sg.outputs.security-group]
+  server_port = 8080
 
-  user_data = <<-EOF
-              #!/bin/bash
-              echo "Hello, World from instance II" > index.html
-              nohup busybox httpd -f -p "${var.server_port}" &
-              EOF
-
-  tags = {
-    Name = "terraform-example-ii-dev"
-  }
+  #tags = {
+  #  Name = "terraform-example-ii-dev"
+  #}
 }
-
